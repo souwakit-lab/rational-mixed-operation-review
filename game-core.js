@@ -4,7 +4,7 @@
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.RationalGameCore = api;
 })(typeof globalThis !== "undefined" ? globalThis : this, function createCore(FractionClass) {
-  const LEVEL_XP = Object.freeze({ 1: 1500, 2: 500, 3: 500, 4: 500 });
+  const LEVEL_XP = Object.freeze({ 1: 800, 2: 500, 3: 500, 4: 500 });
   const getLevelXp = (level) => LEVEL_XP[Math.min(4, Math.max(1, Number(level) || 1))];
   const randomInt = (min, max, rng) => Math.floor(rng() * (max - min + 1)) + min;
   const randomSign = (rng) => rng() < 0.5 ? -1 : 1;
@@ -22,6 +22,11 @@
   function integerTex(value, signed = false) {
     if (signed) return `\\left(${value >= 0 ? "+" : "-"}${Math.abs(value)}\\right)`;
     return value < 0 ? `-${Math.abs(value)}` : String(value);
+  }
+
+  function expandedAddSubtractTex(left, right, mode) {
+    const effectiveRight = mode === 0 ? right : -right;
+    return `${integerTex(left)} ${effectiveRight < 0 ? "-" : "+"} ${Math.abs(effectiveRight)}`;
   }
 
   function fractionTex(value) {
@@ -69,9 +74,12 @@
       const [left, right] = avoidBothPositive(nonZeroInt(-15, 15, rng), nonZeroInt(-15, 15, rng));
       const answer = mode === 0 ? new FractionClass(left).add(right) : new FractionClass(left).sub(right);
       const operation = mode === 0 ? "+" : "-";
-      return question(1, mode === 0 ? "單步加法" : "單步減法", `${integerTex(left, true)} ${operation} ${integerTex(right, true)}`, answer, [
-        mode === 0 ? "同號相加，異號相減，結果取絕對值較大者的符號。" : "減去一個數，等於加上它的相反數。",
-        `${integerTex(left, true)} ${operation} ${integerTex(right, true)} = ${fractionTex(answer)}`,
+      const bracketedTex = `${integerTex(left, true)} ${operation} ${integerTex(right, true)}`;
+      const expanded = rng() < 0.5;
+      const displayTex = expanded ? expandedAddSubtractTex(left, right, mode) : bracketedTex;
+      return question(1, mode === 0 ? "單步加法" : "單步減法", displayTex, answer, [
+        expanded ? `這是拆括號後的式子；先按運算符號判斷是加上還是減去 ${Math.abs(mode === 0 ? right : -right)}。` : mode === 0 ? "同號相加，異號相減，結果取絕對值較大者的符號。" : "減去一個數，等於加上它的相反數。",
+        `${displayTex} = ${fractionTex(answer)}`,
         `答案：${fractionTex(answer)}`,
       ]);
     }

@@ -9,14 +9,16 @@ function seeded(seed) {
   };
 }
 
-assert.deepEqual(core.LEVEL_XP, { 1:1500, 2:500, 3:500, 4:500 });
-assert.equal(core.getLevelXp(1), 1500);
+assert.deepEqual(core.LEVEL_XP, { 1:800, 2:500, 3:500, 4:500 });
+assert.equal(core.getLevelXp(1), 800);
 assert.equal(core.getLevelXp(2), 500);
 assert.equal(core.getLevelXp(4), 500);
 
 const seenTypes = new Map();
 let level2HasImproper = false;
 let level2HasMixed = false;
+let level1HasBracketedAddSubtract = false;
+let level1HasExpandedAddSubtract = false;
 for (let level = 1; level <= 4; level += 1) {
   const rng = seeded(700 + level);
   const types = new Set();
@@ -34,6 +36,10 @@ for (let level = 1; level <= 4; level += 1) {
     if (level === 1) {
       const positiveOperands = item.tex.match(/\\left\(\+\d+\\right\)/g) || [];
       assert.ok(positiveOperands.length < 2, `Level 1 contains two positive operands: ${item.tex}`);
+      if (item.type === "單步加法" || item.type === "單步減法") {
+        level1HasBracketedAddSubtract ||= item.tex.includes("\\left(");
+        level1HasExpandedAddSubtract ||= !item.tex.includes("\\left(");
+      }
     }
     if (level === 2) {
       assert.equal((item.tex.match(/\\frac/g) || []).length, 1);
@@ -46,6 +52,8 @@ for (let level = 1; level <= 4; level += 1) {
 }
 
 assert.deepEqual([...seenTypes.get(1)].sort(), ["單步乘法", "單步加法", "單步減法", "單步除法"]);
+assert.equal(level1HasBracketedAddSubtract, true);
+assert.equal(level1HasExpandedAddSubtract, true);
 assert.deepEqual([...seenTypes.get(2)].sort(), ["分數乘法", "分數加法", "分數減法", "分數除法"]);
 assert.equal(level2HasImproper, true);
 assert.equal(level2HasMixed, true);
@@ -62,7 +70,7 @@ assert.equal(core.isAnswerCorrect("2/1", core.parseAnswer("2")), false);
 assert.equal(core.isAnswerCorrect("1/2", core.parseAnswer("1/2")), true);
 assert.equal(core.isAnswerCorrect("0.5", core.parseAnswer("1/2")), true);
 
-const base = { level:1, xp:1485, total:0, correct:0, streak:0 };
+const base = { level:1, xp:785, total:0, correct:0, streak:0 };
 let result = core.applyResult(base, true);
 assert.equal(result.leveledUp, true);
 assert.equal(result.progress.level, 2);

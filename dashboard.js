@@ -92,7 +92,7 @@ function renderTiers(players, levelStats) {
 }
 
 function totalXp(player) {
-  const completedLevelXp = [0, 0, 1500, 2000, 2500];
+  const completedLevelXp = [0, 0, 800, 1300, 1800];
   const level = Math.min(4, Math.max(1, Number(player.level) || 1));
   return completedLevelXp[level] + Number(player.xp || 0);
 }
